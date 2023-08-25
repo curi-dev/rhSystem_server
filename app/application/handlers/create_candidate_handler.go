@@ -3,7 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"rhSystem_server/app/domain/candidates/entities"
+	"rhSystem_server/app/domain/candidates/dtos"
 	"rhSystem_server/app/domain/candidates/services"
 	repositories "rhSystem_server/app/infrastructure/repositories/candidates"
 	"rhSystem_server/app/infrastructure/repositories/interfaces"
@@ -11,7 +11,7 @@ import (
 
 func CreateCandidateHandler(w http.ResponseWriter, r *http.Request) {
 
-	var newCandidate entities.Candidate
+	var newCandidate dtos.CandidateRequestDTO
 
 	decodeErr := json.NewDecoder(r.Body).Decode(&newCandidate)
 

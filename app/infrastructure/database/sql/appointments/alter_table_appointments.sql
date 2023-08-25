@@ -1,0 +1,2 @@
+ALTER TABLE appointments
+ALTER COLUMN datetime TYPE TIMESTAMP;

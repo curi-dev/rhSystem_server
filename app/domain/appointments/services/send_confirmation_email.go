@@ -21,7 +21,11 @@ func SendConfirmationEmail(email string) bool {
 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 
 	if err := d.DialAndSend(m); err != nil {
+
+		fmt.Println("Err: ", err.Error())
+
 		fmt.Println("Email not sent")
+
 		return false
 	}
 

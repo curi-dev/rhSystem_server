@@ -7,6 +7,10 @@ import (
 	"rhSystem_server/app/domain/appointments/dtos"
 	"rhSystem_server/app/domain/appointments/entities"
 	"rhSystem_server/app/domain/appointments/services"
+
+	// validSlot "rhSystem_server/app/domain/appointments/valueobjects/validSlot"
+	datetime "rhSystem_server/app/domain/appointments/valueobjects/datetime"
+	hour "rhSystem_server/app/domain/appointments/valueobjects/hour"
 	"rhSystem_server/app/infrastructure/database/enums"
 
 	//"rhSystem_server/app/helpers"
@@ -18,7 +22,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func CreateAppointmentUseCase(newAppointmentDTO *dtos.NewAppointmentRequestDTO) (bool, *shared.AppError) { // status, message, error boolean
+func CreateAppointmentUseCase(newAppointmentDTO *dtos.AppointmentRequestDTO) (bool, *shared.AppError) { // status, message, error boolean
 
 	var channel chan bool
 
@@ -83,11 +87,27 @@ func CreateAppointmentUseCase(newAppointmentDTO *dtos.NewAppointmentRequestDTO) 
 		return false, &shared.AppError{Message: "Slot inexistente", StatusCode: http.StatusBadRequest}
 	}
 
+	hour, constructorErr := hour.New(newAppointmentDTO.Slot)
+	if constructorErr != nil {
+		return false, constructorErr
+	}
+
+	datetime, constructorErr := datetime.New(
+		newAppointmentDTO.SplittedDate.Year,
+		newAppointmentDTO.SplittedDate.Month,
+		newAppointmentDTO.SplittedDate.Day,
+		hour.Value,
+	)
+
+	if constructorErr != nil {
+		return false, constructorErr
+	}
+
 	var newAppointment entities.Appointment
 	newAppointment.Candidate = newAppointmentDTO.CandidateId
 	newAppointment.Status = enums.Pending
 	newAppointment.Id = uuid.New()
-	newAppointment.Datetime = newAppointmentDTO.Datetime
+	newAppointment.Datetime = datetime.Value
 	newAppointment.Slot = newAppointmentDTO.Slot
 
 	success, err := services.CreateAppointmentService(&newAppointment, newAppointmentDTO.CandidateId.String(), appointmentsRepo)
@@ -105,7 +125,7 @@ func CreateAppointmentUseCase(newAppointmentDTO *dtos.NewAppointmentRequestDTO) 
 
 			fmt.Println("Send email!")
 
-			services.SendConfirmationEmail(newAppointmentDTO.Email)
+			services.SendConfirmationEmail(newAppointmentDTO.CandidateEmail)
 		}()
 	}
 

@@ -38,7 +38,7 @@ func (repository *PostgresCandidatesRepository) Create(c *entities.Candidate) (*
 
 		if pgError, ok := err.(*pq.Error); ok {
 			if pgError.Code == "23505" {
-				return nil, &shared.AppError{Err: pgErr, Message: "Candidato já existe", StatusCode: http.StatusBadRequest}
+				return nil, &shared.AppError{Err: pgError, Message: "Candidato já existe", StatusCode: http.StatusBadRequest}
 			}
 		}
 
