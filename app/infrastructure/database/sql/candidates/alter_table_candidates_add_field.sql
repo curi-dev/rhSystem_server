@@ -1,0 +1,2 @@
+ALTER TABLE candidates
+ADD COLUMN name VARCHAR(100);

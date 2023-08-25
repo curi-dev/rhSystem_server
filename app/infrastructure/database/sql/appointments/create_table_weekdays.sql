@@ -4,10 +4,7 @@ CREATE TABLE weekdays (
     value INTEGER NOT NULL
 );
 
--- ALTER TABLE weekdays
--- ADD CONSTRAINT unique_weekdays_value UNIQUE (value);
-
-INSERT INTO status (name, value) 
+INSERT INTO weekdays (name, value) 
 VALUES ('segunda-feira', 1),
        ('terça-feira', 2),
        ('quarta-feira', 3),

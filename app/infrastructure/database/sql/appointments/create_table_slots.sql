@@ -8,9 +8,9 @@ CREATE TABLE slots (
 -- ADD CONSTRAINT unique_slots_value UNIQUE (value);
 
 INSERT INTO slots (label, value) 
-VALUES ('8:00 AM - 9:00 AM', 1)
+VALUES ('8:00 AM - 9:00 AM', 1),
        ('9:00 AM - 10:00 AM', 2),
-       ('10:00 AM - 11:00 AM', 3)
+       ('10:00 AM - 11:00 AM', 3),
        ('11:00 AM - 12:00 PM', 4),
        ('12:00 PM - 13:00 PM', 5),
        ('13:00 PM - 14:00 PM', 6),

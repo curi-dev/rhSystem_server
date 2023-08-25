@@ -6,6 +6,6 @@ import (
 )
 
 //func CheckIfCandidateHasAppointmentAlready(id int, repo interfaces.AppointmentsRepositoryInterface) (bool, *shared.AppError) {
-func CheckIfCandidateHasAppointmentAlready(email string, repo interfaces.AppointmentsRepositoryInterface) (map[string]interface{}, *shared.AppError) {
-	return repo.FindByCandidateEmail(email)
+func CheckIfCandidateHasAppointmentAlready(id string, repo interfaces.AppointmentsRepositoryInterface) (map[string]interface{}, *shared.AppError) {
+	return repo.FindByCandidateId(id)
 }

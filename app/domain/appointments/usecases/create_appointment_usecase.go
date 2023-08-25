@@ -20,16 +20,15 @@ import (
 
 func CreateAppointmentUseCase(newAppointmentDTO *dtos.NewAppointmentRequestDTO) (bool, *shared.AppError) { // status, message, error boolean
 
-	// verify if candidate has pending appointment
+	var channel chan bool
+
 	var appointmentsRepo interfaces.AppointmentsRepositoryInterface
 	appointmentsRepo = appointmentsRepository.New()
-	appointmentFound, err := services.CheckIfCandidateHasAppointmentAlready(newAppointmentDTO.Email, appointmentsRepo)
+	appointmentFound, err := services.CheckIfCandidateHasAppointmentAlready(newAppointmentDTO.CandidateId.String(), appointmentsRepo)
 
 	if err != nil {
 		return false, err
 	}
-
-	var channel chan bool
 	switch appointmentFound["status"] {
 	case enums.Pending:
 		// verificar se data de criação do appointment + 25 minutos (confirmation deadline) já passou, se sim update appointment status = 'canceled'
@@ -39,11 +38,13 @@ func CreateAppointmentUseCase(newAppointmentDTO *dtos.NewAppointmentRequestDTO) 
 			now := time.Now()
 			if now.After(confirmationDeadline) {
 				if appointmentId, ok := appointmentFound["id"].(int); ok {
+
+					// what if transaction does not work [execute/update appointment to 'canceled' on defer mode anyway]
 					defer func() {
 						channel <- true
 					}()
 
-					//services.UpdateAppointmentStatusOnRoutineService(appointmentId, enums.Canceled, appointmentsRepo, channel)
+					fmt.Println("Update appointment")
 
 					services.UpdateAppointmentStatusOnRoutineService(
 						dtos.UpdateAppointmentStatusDTO{Id: appointmentId, Status: enums.Canceled, Repo: appointmentsRepo, C: channel},
@@ -60,7 +61,7 @@ func CreateAppointmentUseCase(newAppointmentDTO *dtos.NewAppointmentRequestDTO) 
 	case enums.Confirmed:
 		// verify if 'confirmed' wich means candidate already did the interview or if some reason they didn't show must have a
 		// update cancel operation then
-		return false, &shared.AppError{Message: "Candidato já realizou entrevista", StatusCode: http.StatusBadRequest}
+		return false, &shared.AppError{Message: "Candidato já agendou entrevista", StatusCode: http.StatusBadRequest}
 	case enums.Canceled:
 		// if canceled proceed to appointment scheduling
 		fmt.Println("Canceled")
@@ -70,7 +71,9 @@ func CreateAppointmentUseCase(newAppointmentDTO *dtos.NewAppointmentRequestDTO) 
 
 	var slotRepo interfaces.SlotsRepositoryInterface
 	slotRepo = slotsRepository.New()
-	slotAvaiable, err := services.CheckIfSlotAvaiable(newAppointmentDTO.Slot, slotRepo)
+	slotAvaiable, err := services.CheckIfSlotExists(newAppointmentDTO.Slot, &newAppointmentDTO.SplittedDate, slotRepo)
+
+	fmt.Println("slotAvaiable: ", slotAvaiable)
 
 	if err != nil {
 		return false, err
@@ -80,36 +83,31 @@ func CreateAppointmentUseCase(newAppointmentDTO *dtos.NewAppointmentRequestDTO) 
 		return false, &shared.AppError{Message: "Slot inexistente", StatusCode: http.StatusBadRequest}
 	}
 
-	// iniciar transaction (candidate & appointment)
-	newCandidate := entities.Candidate{
-		Id:    uuid.New(),
-		Name:  newAppointmentDTO.Name,
-		Email: newAppointmentDTO.Email,
-		Phone: newAppointmentDTO.Phone,
-	}
-
 	var newAppointment entities.Appointment
-	newAppointment.Candidate = newCandidate.Id
+	newAppointment.Candidate = newAppointmentDTO.CandidateId
 	newAppointment.Status = enums.Pending
 	newAppointment.Id = uuid.New()
 	newAppointment.Datetime = newAppointmentDTO.Datetime
 	newAppointment.Slot = newAppointmentDTO.Slot
 
-	_, err = services.CreateAppointmentOnTransactionService(&newCandidate, &newAppointment)
+	success, err := services.CreateAppointmentService(&newAppointment, newAppointmentDTO.CandidateId.String(), appointmentsRepo)
 
 	if err != nil {
 		return false, err
 	}
 
-	fmt.Println("SUCCESS: Call defer channel func!")
-
 	// needs to have a goroutine to receive the value otherwise execution will stay blocked (use defer maybe)
 	//channel <- true
+	fmt.Println("Success: Call defer channel func: ", success)
 
-	go func() {
-		fmt.Println("Send email!")
-		//services.SendConfirmationEmail(newCandidate.Email)
-	}()
+	if success {
+		go func() {
 
-	return true, nil
+			fmt.Println("Send email!")
+
+			services.SendConfirmationEmail(newAppointmentDTO.Email)
+		}()
+	}
+
+	return success, nil
 }

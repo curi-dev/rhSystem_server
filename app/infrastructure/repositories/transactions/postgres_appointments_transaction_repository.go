@@ -36,7 +36,7 @@ func (repository *PostgresAppointmentsTransactionRepository) Run(c *entities.Can
 	defer tx.Rollback()
 
 	_, err = tx.Exec(
-		`INSERT INTO candidate (id, name, email, phone) VALUES ($1, $2, $3, $4)`,
+		`INSERT INTO candidates (id, name, email, phone) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING`,
 		c.Id,
 		c.Name,
 		c.Email,
@@ -54,7 +54,7 @@ func (repository *PostgresAppointmentsTransactionRepository) Run(c *entities.Can
 	// "pending": verificar timestamp (mais de 15 minutos proceder) * caso algum usuário tenha criado um appointment e não tenha confirmado no
 	// prazo combinado com o link enviado pro email
 	// "confirmed": interromper execução e retornar resposta coerente para o usuário
-	_, err = tx.Exec(
+	result, err := tx.Exec(
 		`INSERT INTO appointments (id, datetime, slot, candidate, status)
 		VALUES ($1, $2, $3, $4, $5)
 		ON CONFLICT (datetime) DO UPDATE
@@ -79,15 +79,22 @@ func (repository *PostgresAppointmentsTransactionRepository) Run(c *entities.Can
 
 	hasError = fail(err)
 
+	// what happens if appointment scheduling is not succeeded
+
 	if hasError != nil {
 		return false, hasError
 	}
 
 	if err = tx.Commit(); err != nil {
+		fmt.Println("erro no commit")
 		return false, &shared.AppError{Err: err, Message: "Ocorreu um problema interno no servidor", StatusCode: http.StatusInternalServerError}
 	}
 
-	return true, nil
+	rowsAffected, _ := result.RowsAffected()
+
+	fmt.Println("rowsAffected: ", rowsAffected)
+
+	return (rowsAffected > 0), nil
 }
 
 func fail(err error) *shared.AppError {

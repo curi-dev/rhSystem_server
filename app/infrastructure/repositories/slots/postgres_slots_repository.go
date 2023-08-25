@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"time"
 
 	shared "rhSystem_server/app/application/error"
 	"rhSystem_server/app/infrastructure/database"
@@ -24,11 +25,12 @@ func New() *PostgresSlotsRepository {
 	}
 }
 
-func (repository *PostgresSlotsRepository) FindById(id int) (bool, *shared.AppError) { // if slot is valid or not
+func (repository *PostgresSlotsRepository) Find(w *time.Weekday, slot int) (bool, *shared.AppError) { // if slot is valid or not
 
 	rows, err := repository.db.Query(
-		`SELECT id, weekday, slot FROM "validSlots" WHERE id = $1`,
-		id,
+		`SELECT id, weekday, slot FROM "valid_slots" WHERE weekday = $1 AND slot = $2`,
+		w,
+		slot,
 	)
 
 	fmt.Println("rows: ", rows)

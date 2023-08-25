@@ -11,17 +11,23 @@ func CreateAppointmentHandler(w http.ResponseWriter, r *http.Request) {
 
 	var newAppointment dtos.NewAppointmentRequestDTO
 
+	// como o formato DATE do banco se comporta com o datetime que vem do json
 	decodeErr := json.NewDecoder(r.Body).Decode(&newAppointment)
 
 	if decodeErr != nil {
-		http.Error(w, "Ocorreu um problema no servidor", http.StatusInternalServerError)
+		http.Error(w, "Ocorreu um problema no servidor", http.StatusBadRequest)
 		return
 	}
 
-	_, err := usecases.CreateAppointmentUseCase(&newAppointment)
+	success, err := usecases.CreateAppointmentUseCase(&newAppointment)
 
 	if err != nil {
-		http.Error(w, err.Err.Error(), err.StatusCode)
+		http.Error(w, err.Message, err.StatusCode)
+		return
+	}
+
+	if !success {
+		http.Error(w, "Ocorreu um problema no servidor", http.StatusBadRequest)
 		return
 	}
 
