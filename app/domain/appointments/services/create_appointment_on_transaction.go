@@ -1,8 +1,13 @@
 package services
 
-import "rhSystem_server/app/domain/appointments/entities"
+import (
+	"rhSystem_server/app/domain/appointments/entities"
 
-func CreateAppointmentOnTransactionService(candidate *entities.Candidate, appointment *entities.Appointment) bool {
+	shared "rhSystem_server/app/application/error"
+	repositories "rhSystem_server/app/infrastructure/repositories/transactions"
+)
 
-	return false
+func CreateAppointmentOnTransactionService(candidate *entities.Candidate, appointment *entities.Appointment) (bool, *shared.AppError) {
+	repo := repositories.New() // convert into interface like the others
+	return repo.Run(candidate, appointment)
 }
