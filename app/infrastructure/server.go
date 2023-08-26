@@ -8,6 +8,8 @@ import (
 	"github.com/joho/godotenv"
 
 	"rhSystem_server/app/infrastructure/routes"
+
+	"github.com/rs/cors"
 )
 
 func InitServer() {
@@ -19,5 +21,6 @@ func InitServer() {
 		log.Fatal("Port is not found in the environment")
 	}
 
-	log.Fatal(http.ListenAndServe(": "+portString, routes.Router()))
+	handler := cors.Default().Handler(routes.Router())
+	log.Fatal(http.ListenAndServe(": "+portString, handler))
 }

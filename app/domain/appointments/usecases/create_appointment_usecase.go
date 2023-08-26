@@ -37,19 +37,22 @@ func CreateAppointmentUseCase(newAppointmentDTO *dtos.AppointmentRequestDTO) (bo
 	case enums.Pending:
 		// verificar se data de criação do appointment + 25 minutos (confirmation deadline) já passou, se sim update appointment status = 'canceled'
 		if v, ok := appointmentFound["created_at"].(time.Time); ok {
-			confirmationDeadline := v.Add(25 * time.Minute)
 
-			now := time.Now()
-			if now.After(confirmationDeadline) {
+			elapsedTimeFromSchedule := time.Since(v)
+
+			fmt.Println("v: ", v)
+			fmt.Println("elapsedTimeFromSchedule: ", elapsedTimeFromSchedule)
+			fmt.Println("elapsedTimeFromSchedule.Minutes(): ", elapsedTimeFromSchedule.Minutes())
+
+			if elapsedTimeFromSchedule.Minutes()-3*60 > 25 { // timezone compensation
 				if appointmentId, ok := appointmentFound["id"].(int); ok {
 
-					// what if transaction does not work [execute/update appointment to 'canceled' on defer mode anyway]
+					// if transaction does not commit execute/update appointment to 'canceled' on defer mode anyway
 					defer func() {
 						channel <- true
 					}()
 
 					fmt.Println("Update appointment")
-
 					services.UpdateAppointmentStatusOnRoutineService(
 						dtos.UpdateAppointmentStatusDTO{Id: appointmentId, Status: enums.Canceled, Repo: appointmentsRepo, C: channel},
 					)
@@ -58,8 +61,7 @@ func CreateAppointmentUseCase(newAppointmentDTO *dtos.AppointmentRequestDTO) (bo
 				return false, &shared.AppError{Message: "Candidato possui agendamento pendente de confirmação", StatusCode: http.StatusOK}
 			}
 		} else {
-			return false, &shared.AppError{Message: "Candidato já existe", StatusCode: http.StatusInternalServerError}
-
+			return false, &shared.AppError{Message: "Ocorreu um erro no servidor", StatusCode: http.StatusInternalServerError}
 		}
 
 	case enums.Confirmed:

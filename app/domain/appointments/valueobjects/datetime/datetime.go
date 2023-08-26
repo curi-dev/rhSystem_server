@@ -3,9 +3,6 @@ package valueobjects
 import (
 	"fmt"
 	"net/http"
-
-	// "net/http"
-
 	"time"
 
 	shared "rhSystem_server/app/application/error"
@@ -34,3 +31,5 @@ func New(year int, month time.Month, day int, hour int) (*Datetime, *shared.AppE
 		//Value: appointmentDate.Unix(),
 	}, nil
 }
+
+// criar um outro usuário e tentar marcar no mesmo horário -> não pode passar no teste

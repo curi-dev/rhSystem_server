@@ -9,4 +9,5 @@ type AppointmentsRepositoryInterface interface {
 	FindByCandidateId(candidateId string) (map[string]interface{}, *shared.AppError)
 	UpdateStatus(id int, status int) (bool, *shared.AppError)
 	Create(a *entities.Appointment, candidateId string) (bool, *shared.AppError)
+	FindByDatetime(datetime string) ([]int, *shared.AppError)
 }

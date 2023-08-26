@@ -2,15 +2,15 @@ package routes
 
 import (
 	"net/http"
-	// "rhSystem_server/app/application/handlers"
+	"rhSystem_server/app/application/handlers"
 )
 
 func Router() *http.ServeMux {
 	mux := http.NewServeMux()
 
 	// v1
-	mux.HandleFunc("/api/v1/slots", func(w http.ResponseWriter, r *http.Request) {})
-	//mux.HandleFunc("/api/v1/companies/suggest", func(w http.ResponseWriter, r *http.Request) { handlers.SearchCompanyHandler(w, r) })
+	mux.HandleFunc("/api/v1/slots/index", func(w http.ResponseWriter, r *http.Request) { handlers.GetSlotsHandler(w, r) })
+	mux.HandleFunc("/api/v1/slots/filter", func(w http.ResponseWriter, r *http.Request) { handlers.GetAvaiableSlotsHandler(w, r) })
 
 	return mux
 }

@@ -39,8 +39,8 @@ func (repository *PostgresAppointmentsRepository) Create(a *entities.Appointment
 			appointments.status = 3
 			OR (
 				appointments.status = 1
-				AND appointments.created_at >= NOW() - INTERVAL '15 minutes'
-				OR appointments.updated_at >= NOW() - INTERVAL '15 minutes'
+				AND NOW() < appointments.created_at + INTERVAL '25 minutes'
+				AND NOW() < appointments.updated_at + INTERVAL '25 minutes'
 			)
 		);`,
 		a.Id,
@@ -59,7 +59,7 @@ func (repository *PostgresAppointmentsRepository) Create(a *entities.Appointment
 
 		if pgError, ok := err.(*pq.Error); ok {
 			if pgError.Code == "23505" {
-				return false, &shared.AppError{Err: pgError, Message: "Registro já existe", StatusCode: http.StatusBadRequest}
+				return false, &shared.AppError{Err: pgError, Message: "Ocorreu um problema no servidor/Registro duplicado", StatusCode: http.StatusInternalServerError}
 			}
 		}
 
@@ -69,7 +69,11 @@ func (repository *PostgresAppointmentsRepository) Create(a *entities.Appointment
 	rowsAffected, _ := result.RowsAffected()
 	fmt.Println("rowsAffected: ", rowsAffected)
 
-	return (rowsAffected > 0), nil
+	if rowsAffected < 1 {
+		return false, &shared.AppError{Err: err, Message: "Este horário não está mais disponível", StatusCode: http.StatusBadRequest}
+	}
+
+	return true, nil
 }
 
 func (repository *PostgresAppointmentsRepository) FindByCandidateId(candidateId string) (map[string]interface{}, *shared.AppError) { // if slot is valid or not
@@ -114,6 +118,45 @@ func (repository *PostgresAppointmentsRepository) FindByCandidateId(candidateId 
 
 	// no appointment from that candidate found and no error
 	return nil, nil
+}
+
+func (repository *PostgresAppointmentsRepository) FindByDatetime(datetime string) ([]int, *shared.AppError) { // if slot is valid or not
+
+	rows, err := repository.db.Query(
+		`SELECT slot FROM appointments 
+		WHERE datetime = $1 
+		AND status <> 2
+		AND NOW() < appointments.created_at + INTERVAL '25 minutes'`,
+		datetime,
+	)
+
+	// database error during query processing & nothing to do with business logic
+	if err != nil {
+		fmt.Println("Error during query, ", err)
+
+		return nil, &shared.AppError{Err: err, Message: "Ocorreu um problema interno no servidor", StatusCode: http.StatusInternalServerError}
+	}
+
+	defer rows.Close()
+
+	var ids []int
+	for rows.Next() {
+		var id int
+
+		if err := rows.Scan(
+			&id,
+		); err != nil {
+			return nil, &shared.AppError{Err: err, Message: "Ocorreu um problema interno no servidor", StatusCode: http.StatusInternalServerError}
+		}
+
+		ids = append(ids, id)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, &shared.AppError{Err: err, Message: "Ocorreu um problema interno no servidor", StatusCode: http.StatusInternalServerError}
+	}
+
+	return ids, nil
 }
 
 func (repository *PostgresAppointmentsRepository) UpdateStatus(id int, status int) (bool, *shared.AppError) { // if slot is valid or not

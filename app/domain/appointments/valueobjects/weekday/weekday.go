@@ -21,7 +21,8 @@ func New(year int, month time.Month, day int) (*Weekday, *shared.AppError) {
 
 	appointmentDate := time.Date(year, month, day, 0, 0, 0, 0, location)
 
-	fmt.Println("appointmentDate: ", appointmentDate.Weekday())
+	fmt.Println("appointmentDate [weekday]: ", appointmentDate.Weekday())
+	fmt.Println("appointmentDate: ", appointmentDate)
 
 	return &Weekday{
 		Value: appointmentDate.Weekday(),
