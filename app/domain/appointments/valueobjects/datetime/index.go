@@ -21,6 +21,10 @@ func New(year int, month time.Month, day int, hour int) (*Datetime, *shared.AppE
 		return nil, &shared.AppError{Message: "Ocorreu um erro no servidor", StatusCode: http.StatusInternalServerError}
 	}
 
+	fmt.Println("year: ", year)
+	fmt.Println("month: ", month)
+	fmt.Println("day: ", day)
+
 	appointmentDate := time.Date(year, month, day, hour, 0, 0, 0, location)
 
 	//fmt.Println("appointmentDate: ", time.Unix(appointmentDate.Unix(), 0).String())

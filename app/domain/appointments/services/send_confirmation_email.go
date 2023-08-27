@@ -44,7 +44,7 @@ func SendConfirmationEmail(to string, appointmentId string) bool {
 		ServerName:         host,
 	}
 
-	body := fmt.Sprintf("http://localhost:3000/%s", appointmentId)
+	body := fmt.Sprintf("http://localhost:3000/confirmed?apnmnt=%s", appointmentId)
 	msg := "From: " + "shopper.tiago@gmail.com" + "\n" + "To: " + to + "\n" + "Subject: Link de confirmação\n\n" + body
 
 	//conecta com o servidor SMTP

@@ -27,8 +27,8 @@ func (repository *PostgresAppointmentsRepository) Create(a *entities.Appointment
 
 	// VERIFICA SE SLOT FOI UTILIZADO. SE SIM, VERIFICA STATUS:
 	// "canceled": proceder
-	// "pending": verificar timestamp (mais de 15 minutos proceder) * caso algum usuário tenha criado um appointment e não tenha confirmado no
-	// prazo combinado com o link enviado pro email
+	// "pending": verificar timestamp (mais de 25 minutos proceder) * caso algum usuário tenha criado um appointment
+	//e não tenha confirmado com o link enviado pro email
 	// "confirmed": interromper execução e retornar resposta coerente para o usuário
 	result, err := repository.db.Exec(
 		`INSERT INTO appointments (id, datetime, slot, candidate, status)
@@ -39,8 +39,8 @@ func (repository *PostgresAppointmentsRepository) Create(a *entities.Appointment
 			appointments.status = 3
 			OR (
 				appointments.status = 1
-				AND NOW() < appointments.created_at + INTERVAL '25 minutes'
-				AND NOW() < appointments.updated_at + INTERVAL '25 minutes'
+				AND NOW() > appointments.created_at + INTERVAL '25 minutes'
+				AND NOW() > appointments.updated_at + INTERVAL '25 minutes'
 			)
 		);`,
 		a.Id,
@@ -185,7 +185,7 @@ func (repository *PostgresAppointmentsRepository) UpdateStatus(id int, status in
 		return true, nil
 	}
 
-	return false, &shared.AppError{Err: err, Message: "O prazo de confirmação expirou", StatusCode: http.StatusInternalServerError}
+	return false, &shared.AppError{Err: err, Message: "Não foi possível confirmar o agendamento. Tente novamente", StatusCode: http.StatusBadRequest}
 }
 
 func (repository *PostgresAppointmentsRepository) UpdateStatusToConfirmed(id string) (bool, *shared.AppError) {

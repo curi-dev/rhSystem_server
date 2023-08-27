@@ -14,7 +14,7 @@ func ConfirmAppointmentHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appointmentId := u.Get("appointment")
+	appointmentId := u.Get("appointmentId")
 
 	success, err := services.ConfirmAppointmentService(appointmentId)
 
