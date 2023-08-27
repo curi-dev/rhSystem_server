@@ -12,6 +12,7 @@ type Weekday struct {
 	Value time.Weekday
 }
 
+//func New(year int, month time.Month, day int) (*Weekday, *shared.AppError) {
 func New(year int, month time.Month, day int) (*Weekday, *shared.AppError) {
 	location, loadLocationErr := time.LoadLocation("America/Sao_Paulo")
 
@@ -21,8 +22,8 @@ func New(year int, month time.Month, day int) (*Weekday, *shared.AppError) {
 
 	appointmentDate := time.Date(year, month, day, 0, 0, 0, 0, location)
 
-	fmt.Println("appointmentDate [weekday]: ", appointmentDate.Weekday())
 	fmt.Println("appointmentDate: ", appointmentDate)
+	fmt.Println("appointmentDate [weekday]: ", appointmentDate.Weekday())
 
 	return &Weekday{
 		Value: appointmentDate.Weekday(),

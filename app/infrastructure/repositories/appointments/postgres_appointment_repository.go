@@ -124,9 +124,10 @@ func (repository *PostgresAppointmentsRepository) FindByDatetime(datetime string
 
 	rows, err := repository.db.Query(
 		`SELECT slot FROM appointments 
-		WHERE datetime = $1 
+		WHERE DATE(datetime) = DATE($1) 
 		AND status <> 2
-		AND NOW() < appointments.created_at + INTERVAL '25 minutes'`,
+		AND NOW() < appointments.created_at + INTERVAL '25 minutes'
+		AND NOW() < appointments.updated_at + INTERVAL '25 minutes'`,
 		datetime,
 	)
 
@@ -165,6 +166,34 @@ func (repository *PostgresAppointmentsRepository) UpdateStatus(id int, status in
 		`UPDATE appointments SET status = $1 WHERE id = $2`,
 		status,
 		id,
+	)
+
+	// database error during query processing & nothing to do with business logic
+	if err != nil {
+		fmt.Println("Error during query, ", err)
+
+		return false, &shared.AppError{Err: err, Message: "Ocorreu um problema interno no servidor", StatusCode: http.StatusInternalServerError}
+	}
+
+	affected, err := result.RowsAffected()
+
+	if err != nil {
+		return false, &shared.AppError{Err: err, Message: "Ocorreu um problema interno no servidor", StatusCode: http.StatusInternalServerError}
+	}
+
+	if affected > 0 {
+		return true, nil
+	}
+
+	return false, &shared.AppError{Err: err, Message: "O prazo de confirmação expirou", StatusCode: http.StatusInternalServerError}
+}
+
+func (repository *PostgresAppointmentsRepository) UpdateStatusToConfirmed(id string) (bool, *shared.AppError) {
+
+	result, err := repository.db.Exec(
+		`UPDATE appointments SET status = 2 WHERE id = $1
+		AND NOW() < appointments.created_at + INTERVAL '25 minutes'`,
+		id, // problems with id?
 	)
 
 	// database error during query processing & nothing to do with business logic

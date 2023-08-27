@@ -10,12 +10,18 @@ import (
 	appointmentsRepo "rhSystem_server/app/infrastructure/repositories/appointments"
 	"rhSystem_server/app/infrastructure/repositories/interfaces"
 	slotsRepo "rhSystem_server/app/infrastructure/repositories/slots"
+	"strconv"
+	"time"
 )
 
 func GetAvaiableSlotsUseCase(avaiableSlotsDTO *dtos.AvaiableSlotsRequestDTO) ([]int, *shared.AppError) {
 
 	// get all valid slots for specific date
-	w, err := weekdayValue.New(avaiableSlotsDTO.SplittedDate.Year, avaiableSlotsDTO.SplittedDate.Month, avaiableSlotsDTO.SplittedDate.Day)
+	year, _ := strconv.Atoi(avaiableSlotsDTO.Year)
+	month, _ := strconv.Atoi(avaiableSlotsDTO.Month)
+	day, _ := strconv.Atoi(avaiableSlotsDTO.Day)
+
+	w, err := weekdayValue.New(year, time.Month(month), day)
 
 	if err != nil {
 		return nil, err
@@ -24,12 +30,18 @@ func GetAvaiableSlotsUseCase(avaiableSlotsDTO *dtos.AvaiableSlotsRequestDTO) ([]
 	var slotsRepository interfaces.SlotsRepositoryInterface
 	slotsRepository = slotsRepo.New()
 
-	// it represents the avaiable slot values for a specific day
-	var avaiableSlots []int
+	// w.Value corresponds to the id value but the right way to do it is to fetch the weekday by value and retrieve its id
 	validDaySlots, err := services.GetWeekDayValidSlotsService(w.Value, slotsRepository)
 
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("validDaySlots: ", validDaySlots)
+	fmt.Println("len(validDaySlots): ", len(validDaySlots))
+
 	if len(validDaySlots) == 0 {
-		return avaiableSlots, nil
+		return nil, nil
 	}
 
 	if err != nil {
@@ -39,9 +51,11 @@ func GetAvaiableSlotsUseCase(avaiableSlotsDTO *dtos.AvaiableSlotsRequestDTO) ([]
 	var appointmentsRepository interfaces.AppointmentsRepositoryInterface
 	appointmentsRepository = appointmentsRepo.New()
 
-	datetime, err := datetimeValue.New(avaiableSlotsDTO.SplittedDate.Year, avaiableSlotsDTO.SplittedDate.Month, avaiableSlotsDTO.SplittedDate.Day, 0)
+	datetime, err := datetimeValue.New(year, time.Month(month), day, 0)
 
 	blockedDaySlots, err := services.FilterAppointmentsByDatetimeService(datetime.Value, appointmentsRepository)
+
+	fmt.Println("blockedDaySlots: ", blockedDaySlots)
 
 	if err != nil {
 		return nil, err

@@ -10,6 +10,8 @@ import (
 	slotAggregate "rhSystem_server/app/domain/appointments/aggregate/slot"
 	validslotAggregate "rhSystem_server/app/domain/appointments/aggregate/validSlot"
 	"rhSystem_server/app/infrastructure/database"
+
+	"github.com/google/uuid"
 	//"github.com/google/uuid"
 	//"github.com/lib/pq"
 	//"rhSystem_server/app/domain/appointments/entities"
@@ -71,29 +73,34 @@ func (repository *PostgresSlotsRepository) Index() ([]slotAggregate.Slot, *share
 
 func (repository *PostgresSlotsRepository) FindByWeekday(weekdayId int) ([]validslotAggregate.ValidSlot, *shared.AppError) {
 
+	fmt.Println("weekdayId: ", weekdayId)
+
+	query := `SELECT id, weekday, slot FROM "valid_slots" WHERE weekday = $1`
 	rows, err := repository.db.Query(
-		`SELECT id, weekday, slot FROM "valid_slots" WHERE weekday = $1`,
+		query,
 		weekdayId,
 	)
 
+	fmt.Println("Query: ", query)
+
 	defer rows.Close()
 
-	fmt.Println("rows: ", rows)
-
 	if err != nil {
-		if err != nil {
-			fmt.Println("Error during query, ", err)
+		fmt.Println("Error during query, ", err)
 
-			return nil, &shared.AppError{Err: err, Message: "Ocorreu um problema interno no servidor", StatusCode: http.StatusInternalServerError}
-		}
+		return nil, &shared.AppError{Err: err, Message: "Ocorreu um problema interno no servidor", StatusCode: http.StatusInternalServerError}
 	}
 
 	var validSlots []validslotAggregate.ValidSlot
 
 	for rows.Next() {
-		var id int
-		var weekday int
-		var slot int
+
+		var (
+			id      uuid.UUID
+			weekday int
+			slot    int
+		)
+
 		if err := rows.Scan(
 			&id,
 			&weekday,

@@ -127,7 +127,7 @@ func CreateAppointmentUseCase(newAppointmentDTO *dtos.AppointmentRequestDTO) (bo
 
 			fmt.Println("Send email!")
 
-			services.SendConfirmationEmail(newAppointmentDTO.CandidateEmail)
+			services.SendConfirmationEmail(newAppointmentDTO.CandidateEmail, newAppointment.Id.String()) // id is coming from the prebuilt struct (before databse insertion)
 		}()
 	}
 

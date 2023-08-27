@@ -1,7 +1,9 @@
 package valueobjects
 
+import "github.com/google/uuid"
+
 type ValidSlot struct {
-	Id      int
+	Id      uuid.UUID
 	Weekday int
 	Slot    int
 }
