@@ -7,7 +7,13 @@ import (
 )
 
 type CandidateRepositoryInterface interface {
-	FindByEmail(email string) (*entities.Candidate, *shared.AppError)
+	// candidate
 	Create(c *entities.Candidate) (*entities.Candidate, *shared.AppError)
+
+	FindByEmail(email string) (*entities.Candidate, *shared.AppError)
+	FindById(id string) (*entities.Candidate, *shared.AppError)
+
+	// access key
 	AccessKey(k *valueobjects.AccessKey) (*valueobjects.AccessKey, *shared.AppError)
+	FindKeyByCandidateId(candidateId string) (*valueobjects.AccessKey, *shared.AppError)
 }

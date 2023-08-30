@@ -53,7 +53,7 @@ func GetAvaiableSlotsUseCase(avaiableSlotsDTO *dtos.AvaiableSlotsRequestDTO) ([]
 
 	datetime, _ := datetimeValue.New(year, time.Month(month), day, 1) // no error handling
 
-	blockedDaySlots, err := services.FilterAppointmentsByDatetimeService(datetime.Value, appointmentsRepository)
+	blockedDaySlots, err := services.FindBlockedSlotsByDatetimeService(datetime.Value, appointmentsRepository)
 
 	fmt.Println("blockedDaySlots: ", blockedDaySlots)
 

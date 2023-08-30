@@ -27,13 +27,17 @@ func CreateAccessKeyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusAccepted)
-	w.Header().Set("Content-Type", "application/json")
+	if candidate != nil {
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		encodeErr := json.NewEncoder(w).Encode(candidate)
 
-	encodeErr := json.NewEncoder(w).Encode(candidate)
-
-	if encodeErr != nil {
-		http.Error(w, "Ocorreu um problema no servidor", http.StatusInternalServerError)
-		return
+		if encodeErr != nil {
+			http.Error(w, "Ocorreu um problema no servidor", http.StatusInternalServerError)
+			return
+		}
+	} else {
+		w.WriteHeader(http.StatusUnauthorized)
 	}
+
 }

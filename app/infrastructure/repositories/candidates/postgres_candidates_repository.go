@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
@@ -90,6 +91,46 @@ func (repository *PostgresCandidatesRepository) FindByEmail(email string) (*enti
 	return nil, nil
 }
 
+func (repository *PostgresCandidatesRepository) FindById(id string) (*entities.Candidate, *shared.AppError) {
+
+	rows, err := repository.db.Query(
+		`SELECT id, name, email, phone FROM candidates WHERE id = $1`,
+		id,
+	)
+
+	fmt.Println("rows: ", rows)
+
+	// database error during query processing & nothing to do with business logic
+	if err != nil {
+		fmt.Println("Error during query, ", err)
+
+		return nil, &shared.AppError{Err: err, Message: "Ocorreu um problema no servidor", StatusCode: http.StatusInternalServerError}
+	}
+
+	defer rows.Close()
+
+	if rows.Next() {
+		var id uuid.UUID
+		var name string
+		var email string
+		var phone string
+
+		if err := rows.Scan(&id, &name, &email, &phone); err != nil {
+			return nil, &shared.AppError{Err: err, Message: "Ocorreu um problema no servidor", StatusCode: http.StatusInternalServerError}
+		}
+
+		if err := rows.Err(); err != nil {
+			return nil, &shared.AppError{Err: err, Message: "Ocorreu um problema no servidor", StatusCode: http.StatusInternalServerError}
+		}
+
+		candidate := entities.Candidate{Id: id, Name: name, Email: email, Phone: phone}
+
+		return &candidate, nil
+	}
+
+	return nil, nil
+}
+
 func (repository *PostgresCandidatesRepository) AccessKey(k *valueobjects.AccessKey) (*valueobjects.AccessKey, *shared.AppError) {
 
 	result, err := repository.db.Exec(
@@ -121,4 +162,48 @@ func (repository *PostgresCandidatesRepository) AccessKey(k *valueobjects.Access
 
 	// returns the same data
 	return k, nil
+}
+
+func (repository *PostgresCandidatesRepository) FindKeyByCandidateId(candidateId string) (*valueobjects.AccessKey, *shared.AppError) { // if slot is valid or not
+
+	rows, err := repository.db.Query(
+		`SELECT id, value, candidate, created_at FROM "access_keys" WHERE candidate = $1
+		ORDER BY created_at DESC`,
+		candidateId,
+	)
+
+	fmt.Println("rows: ", rows)
+
+	// database error during query processing & nothing to do with business logic
+	if err != nil {
+		fmt.Println("Error during query, ", err)
+
+		return nil, &shared.AppError{Err: err, Message: "Ocorreu um problema no servidor", StatusCode: http.StatusInternalServerError}
+	}
+
+	defer rows.Close()
+
+	//for rows.Next() {
+	if rows.Next() {
+		var id uuid.UUID
+		var value string
+		var candidate uuid.UUID
+		var createdAt time.Time
+
+		if err := rows.Scan(&id, &value, &candidate, &createdAt); err != nil {
+			return nil, &shared.AppError{Err: err, Message: "Ocorreu um problema no servidor", StatusCode: http.StatusInternalServerError}
+		}
+
+		if err := rows.Err(); err != nil {
+			return nil, &shared.AppError{Err: err, Message: "Ocorreu um problema no servidor", StatusCode: http.StatusInternalServerError}
+		}
+
+		lastAccessKey := valueobjects.AccessKey{Id: id, Value: value, Candidate: candidate.String(), CreatedAt: createdAt}
+
+		fmt.Println("lastAccessKey: ", lastAccessKey)
+
+		return &lastAccessKey, nil
+	}
+
+	return nil, nil
 }

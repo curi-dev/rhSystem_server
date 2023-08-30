@@ -2,9 +2,8 @@ package usecases
 
 import (
 	"fmt"
-	"net/http"
 	shared "rhSystem_server/app/application/error"
-	appointmentsServices "rhSystem_server/app/domain/appointments/services"
+	applicationServices "rhSystem_server/app/application/services"
 	"rhSystem_server/app/domain/candidates/entities"
 	candidatesServices "rhSystem_server/app/domain/candidates/services"
 	repositories "rhSystem_server/app/infrastructure/repositories/candidates"
@@ -26,7 +25,8 @@ func CreateAccessKeyUseCase(email string) (*entities.Candidate, *shared.AppError
 
 	// candidate does not exist on database (resource not found)
 	if candidate == nil {
-		return nil, &shared.AppError{Err: nil, Message: "Candidato não encontrado", StatusCode: http.StatusNotFound}
+		//return nil, &shared.AppError{Err: nil, Message: "Candidato não encontrado", StatusCode: http.StatusUnauthorized}
+		return nil, nil
 	}
 
 	go func() {
@@ -36,7 +36,9 @@ func CreateAccessKeyUseCase(email string) (*entities.Candidate, *shared.AppError
 			fmt.Println("Error: ", err.Message)
 		}
 
-		success := appointmentsServices.SendConfirmationEmail(candidate.Email, accessKey.Value)
+		subject := "CHAVE DE ACESSO"
+		body := accessKey.Value
+		success := applicationServices.SendEmail(candidate.Email, subject, body)
 
 		if success {
 			fmt.Println("Email sent!")

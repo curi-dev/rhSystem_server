@@ -6,9 +6,10 @@ import (
 	"rhSystem_server/app/infrastructure/repositories/interfaces"
 )
 
-func FilterAppointmentsByDatetimeService(datetime string, repo interfaces.AppointmentsRepositoryInterface) ([]int, *shared.AppError) {
+//func FilterAppointmentsByDatetimeService(datetime string, repo interfaces.AppointmentsRepositoryInterface) ([]int, *shared.AppError) {
+func FindBlockedSlotsByDatetimeService(datetime string, repo interfaces.AppointmentsRepositoryInterface) ([]int, *shared.AppError) {
 
-	fmt.Println("datetime: ", datetime)
+	fmt.Println("datetime: [FilterAppointmentsByDatetimeService]", datetime)
 
-	return repo.FindByDatetime(datetime)
+	return repo.FindBlockedSlotsByDatetime(datetime)
 }

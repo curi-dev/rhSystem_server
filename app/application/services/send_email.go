@@ -2,7 +2,6 @@ package services
 
 import (
 	"crypto/tls"
-	"fmt"
 	"net/smtp"
 )
 
@@ -33,7 +32,7 @@ import (
 // 	return true
 // }
 
-func SendConfirmationEmail(to string, appointmentId string) bool {
+func SendEmail(to string, subject string, body string) bool {
 	//configuração
 	servername := "smtp.gmail.com:465"                                    //servidor SMTP e PORTA
 	host := "smtp.gmail.com"                                              //host
@@ -44,8 +43,8 @@ func SendConfirmationEmail(to string, appointmentId string) bool {
 		ServerName:         host,
 	}
 
-	body := fmt.Sprintf("http://localhost:3000/confirmed?apnmnt=%s", appointmentId)
-	msg := "From: " + "shopper.tiago@gmail.com" + "\n" + "To: " + to + "\n" + "Subject: Link de confirmação\n\n" + body
+	//body := fmt.Sprintf("http://localhost:3000/confirmed?apnmnt=%s", appointmentId)
+	msg := "From: " + "shopper.tiago@gmail.com" + "\n" + "To: " + to + "\n" + subject + body
 
 	//conecta com o servidor SMTP
 	conn, err := tls.Dial("tcp", servername, tlsConfig)

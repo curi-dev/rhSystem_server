@@ -10,6 +10,7 @@ import (
 	"rhSystem_server/app/domain/appointments/entities"
 	"rhSystem_server/app/infrastructure/database"
 
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
 
@@ -23,6 +24,72 @@ func New() *PostgresAppointmentsRepository {
 	}
 }
 
+func (repository *PostgresAppointmentsRepository) Index() ([]interface{}, *shared.AppError) {
+
+	rows, err := repository.db.Query(
+		`SELECT A.id, A.datetime, A.slot, C.id as "candidateId", C.email, C.phone, c."resumeUrl", C.name FROM appointments as A
+		LEFT JOIN candidates as C
+		on A.candidate = C.id
+		WHERE A.status = 2
+		ORDER BY A.created_at ASC;`,
+	)
+
+	defer rows.Close()
+
+	// database error during query processing & nothing to do with business logic
+	if err != nil {
+		fmt.Println("Error during query, ", err)
+
+		return nil, &shared.AppError{Err: err, Message: "Ocorreu um problema interno no servidor", StatusCode: http.StatusInternalServerError}
+	}
+
+	var appointments []interface{}
+
+	for rows.Next() {
+		appointment := make(map[string]interface{})
+
+		var id string
+		var datetime time.Time
+		var slot int
+		var candidateId string
+		var email string
+		var phone string
+		var resumeUrl sql.NullString
+		var name string
+		if err := rows.Scan(
+			&id,
+			&datetime,
+			&slot,
+			&candidateId,
+			&email,
+			&phone,
+			&resumeUrl,
+			&name); err != nil {
+
+			fmt.Println("appointment: ", err.Error())
+			return nil, &shared.AppError{Err: err, Message: "Ocorreu um problema interno no servidor", StatusCode: http.StatusInternalServerError}
+		}
+
+		appointment["id"] = id
+		appointment["datetime"] = datetime
+		appointment["slot"] = slot
+		appointment["candidateId"] = candidateId
+		appointment["email"] = email
+		appointment["phone"] = phone
+		appointment["resumeUrl"] = resumeUrl.String
+		appointment["name"] = name
+
+		appointments = append(appointments, appointment)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, &shared.AppError{Err: err, Message: "Não foi possível confirmar o agendamento. Tente novamente", StatusCode: http.StatusBadRequest}
+	}
+
+	return appointments, nil
+}
+
+// Query has additional conditionals in order to be consistent with the business rules and data modeling
 func (repository *PostgresAppointmentsRepository) Create(a *entities.Appointment, candidateId string) (bool, *shared.AppError) {
 
 	// VERIFICA SE SLOT FOI UTILIZADO. SE SIM, VERIFICA STATUS:
@@ -76,8 +143,9 @@ func (repository *PostgresAppointmentsRepository) Create(a *entities.Appointment
 	return true, nil
 }
 
-func (repository *PostgresAppointmentsRepository) FindByCandidateId(candidateId string) (map[string]interface{}, *shared.AppError) { // if slot is valid or not
+func (repository *PostgresAppointmentsRepository) FindByCandidateId(candidateId uuid.UUID) (map[string]interface{}, *shared.AppError) { // if slot is valid or not
 
+	fmt.Println("candidateId: ", candidateId)
 	rows, err := repository.db.Query(
 		`SELECT id, status, created_at FROM appointments WHERE candidate = $1`,
 		candidateId,
@@ -113,6 +181,8 @@ func (repository *PostgresAppointmentsRepository) FindByCandidateId(candidateId 
 		response["status"] = status
 		response["created_at"] = createdAt
 
+		fmt.Println("response: ", response)
+
 		return response, nil
 	}
 
@@ -120,14 +190,56 @@ func (repository *PostgresAppointmentsRepository) FindByCandidateId(candidateId 
 	return nil, nil
 }
 
+// Return in use (confirmed or valid pending) slots for a specific day
+func (repository *PostgresAppointmentsRepository) FindBlockedSlotsByDatetime(datetime string) ([]int, *shared.AppError) {
+
+	rows, err := repository.db.Query(
+		`SELECT slot FROM appointments 
+		WHERE (
+			DATE(datetime) = DATE($1) 
+			AND appointments.status = 2
+			OR appointments.status = 3 AND (
+				NOW() < appointments.created_at + INTERVAL '25 minutes'
+				AND NOW() < appointments.updated_at + INTERVAL '25 minutes'
+			)
+		)`,
+		datetime,
+	)
+
+	// database error during query processing & nothing to do with business logic
+	if err != nil {
+		fmt.Println("Error during query, ", err)
+
+		return nil, &shared.AppError{Err: err, Message: "Ocorreu um problema interno no servidor", StatusCode: http.StatusInternalServerError}
+	}
+
+	defer rows.Close()
+
+	var ids []int
+	for rows.Next() {
+		var id int
+
+		if err := rows.Scan(
+			&id,
+		); err != nil {
+			return nil, &shared.AppError{Err: err, Message: "Ocorreu um problema interno no servidor", StatusCode: http.StatusInternalServerError}
+		}
+
+		ids = append(ids, id)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, &shared.AppError{Err: err, Message: "Ocorreu um problema interno no servidor", StatusCode: http.StatusInternalServerError}
+	}
+
+	return ids, nil
+}
+
 func (repository *PostgresAppointmentsRepository) FindByDatetime(datetime string) ([]int, *shared.AppError) { // if slot is valid or not
 
 	rows, err := repository.db.Query(
 		`SELECT slot FROM appointments 
-		WHERE DATE(datetime) = DATE($1) 
-		AND status <> 2
-		AND NOW() < appointments.created_at + INTERVAL '25 minutes'
-		AND NOW() < appointments.updated_at + INTERVAL '25 minutes'`,
+		WHERE DATE(datetime) = DATE($1)`,
 		datetime,
 	)
 

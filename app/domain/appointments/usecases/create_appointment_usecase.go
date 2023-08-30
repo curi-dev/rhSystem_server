@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"net/http"
 	shared "rhSystem_server/app/application/error"
+	applicationServices "rhSystem_server/app/application/services"
 	"rhSystem_server/app/domain/appointments/dtos"
 	"rhSystem_server/app/domain/appointments/entities"
 	"rhSystem_server/app/domain/appointments/services"
+	"strconv"
 
 	// validSlot "rhSystem_server/app/domain/appointments/valueobjects/validSlot"
 	datetime "rhSystem_server/app/domain/appointments/valueobjects/datetime"
@@ -28,7 +30,10 @@ func CreateAppointmentUseCase(newAppointmentDTO *dtos.AppointmentRequestDTO) (bo
 
 	var appointmentsRepo interfaces.AppointmentsRepositoryInterface
 	appointmentsRepo = appointmentsRepository.New()
-	appointmentFound, err := services.CheckIfCandidateHasAppointmentAlready(newAppointmentDTO.CandidateId.String(), appointmentsRepo)
+	appointmentFound, err := services.CheckIfCandidateHasAppointmentAlready(newAppointmentDTO.CandidateId, appointmentsRepo)
+
+	fmt.Println("appointmentFound: ", appointmentFound)
+	fmt.Println("err: ", err)
 
 	if err != nil {
 		return false, err
@@ -126,8 +131,20 @@ func CreateAppointmentUseCase(newAppointmentDTO *dtos.AppointmentRequestDTO) (bo
 		go func() {
 
 			fmt.Println("Send email!")
+			slotString := strconv.Itoa(newAppointment.Slot)
+			dayString := strconv.Itoa(newAppointmentDTO.SplittedDate.Day)
+			yearString := strconv.Itoa(newAppointmentDTO.SplittedDate.Year)
+			monthString := strconv.Itoa(int(newAppointmentDTO.SplittedDate.Month))
 
-			services.SendConfirmationEmail(newAppointmentDTO.CandidateEmail, newAppointment.Id.String()) // id is coming from the prebuilt struct (before databse insertion)
+			subject := "Subject: Link de confirmação\n\n"
+			body := fmt.Sprintf("http://localhost:3000/confirmed?apnmnt=%s&slot=%s&day=%s&month=%s&year=%s",
+				newAppointment.Id.String(),
+				slotString,
+				dayString,
+				monthString,
+				yearString,
+			)
+			applicationServices.SendEmail(newAppointmentDTO.CandidateEmail, subject, body) // id is coming from the prebuilt struct (before databse insertion)
 		}()
 	}
 
