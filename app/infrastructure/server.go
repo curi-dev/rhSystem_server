@@ -31,5 +31,5 @@ func InitServer() {
 
 	fmt.Println("port: ", portString)
 
-	log.Fatal(http.ListenAndServe(": "+portString, handler))
+	log.Fatal(http.ListenAndServe(": "+"8080", handler))
 }
