@@ -15,8 +15,7 @@ VALUES ('43a21f87-5477-41ef-b473-58814c6acffd', 2, 1),
        ('2a9cbbc1-ebd3-45e6-8725-9ab23635f744', 4, 7), 
        ('a3bd9749-03aa-4ab0-bec6-e4c76dd8ebff', 5, 4), 
        ('a03e33dc-aafe-4cb2-9747-598dc46e19b8', 5, 6), 
-       ('9fa18e04-b548-4ca3-9579-09b24906fd0a', 5, 10), 
-       ('a328159a-677a-41d3-8acd-90f652da1e45', 6, 2); 
+       ('9fa18e04-b548-4ca3-9579-09b24906fd0a', 5, 10);  
 
 -- VALUES (uuid_generate_v4(), 2, 1), -- terça-feira, 8:00 AM - 9:00 AM
 --        (uuid_generate_v4(), 2, 2), -- terça-feira, 9:00 AM - 10:00 AM

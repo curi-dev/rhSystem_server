@@ -11,6 +11,7 @@ import (
 func CreateAccessKeyHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("r.URL.RawQuery: ", r.URL.RawQuery)
+
 	u, parseErr := url.ParseQuery(r.URL.RawQuery)
 	if parseErr != nil {
 		http.Error(w, "Ocorreu um problema no servidor", http.StatusBadRequest)
