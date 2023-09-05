@@ -134,7 +134,7 @@ func CreateAppointmentUseCase(newAppointmentDTO *dtos.AppointmentRequestDTO) (bo
 
 			confirmationLink := os.Getenv("CONFIRMATION_LINK")
 			subject := "Subject: Link de confirmação\n\n"
-			body := fmt.Sprintf("%s?apnmnt=%s&slot=%s&day=%s&month=%s&year=%s",
+			body := fmt.Sprintf("%s/confirmed?apnmnt=%s&slot=%s&day=%s&month=%s&year=%s",
 				confirmationLink,
 				newAppointment.Id.String(),
 				slotString,
@@ -143,10 +143,11 @@ func CreateAppointmentUseCase(newAppointmentDTO *dtos.AppointmentRequestDTO) (bo
 				yearString,
 			)
 
-			fmt.Println("confirmation link: ", confirmationLink)
-			fmt.Println("newAppointmentDTO.CandidateEmail: ", newAppointmentDTO.CandidateEmail)
+			err := applicationServices.SendEmail(newAppointmentDTO.CandidateEmail, subject, body) // id is coming from the prebuilt struct (before databse insertion)
 
-			applicationServices.SendEmail(newAppointmentDTO.CandidateEmail, subject, body) // id is coming from the prebuilt struct (before databse insertion)
+			if err != nil {
+				fmt.Println("error: ", err.Error())
+			}
 		}()
 	}
 

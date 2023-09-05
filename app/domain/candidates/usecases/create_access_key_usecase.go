@@ -2,12 +2,13 @@ package usecases
 
 import (
 	"fmt"
+	"rhSystem_server/app/domain/candidates/entities"
+	"rhSystem_server/app/infrastructure/repositories/interfaces"
+
 	shared "rhSystem_server/app/application/error"
 	applicationServices "rhSystem_server/app/application/services"
-	"rhSystem_server/app/domain/candidates/entities"
 	candidatesServices "rhSystem_server/app/domain/candidates/services"
 	repositories "rhSystem_server/app/infrastructure/repositories/candidates"
-	"rhSystem_server/app/infrastructure/repositories/interfaces"
 )
 
 func CreateAccessKeyUseCase(email string) (*entities.Candidate, *shared.AppError) {
@@ -38,9 +39,11 @@ func CreateAccessKeyUseCase(email string) (*entities.Candidate, *shared.AppError
 
 		subject := "CHAVE DE ACESSO"
 		body := accessKey.Value
-		success := applicationServices.SendEmail(candidate.Email, subject, body)
+		emailErr := applicationServices.SendEmail(candidate.Email, subject, body)
 
-		if success {
+		if emailErr != nil {
+			fmt.Println("error: ", emailErr.Error())
+		} else {
 			fmt.Println("Email sent!")
 		}
 

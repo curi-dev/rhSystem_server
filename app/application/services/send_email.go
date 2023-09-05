@@ -32,7 +32,7 @@ import (
 // 	return true
 // }
 
-func SendEmail(to string, subject string, body string) bool {
+func SendEmail(to string, subject string, body string) error {
 	//configuração
 	servername := "smtp.gmail.com:465"                                    //servidor SMTP e PORTA
 	host := "smtp.gmail.com"                                              //host
@@ -49,54 +49,54 @@ func SendEmail(to string, subject string, body string) bool {
 	//conecta com o servidor SMTP
 	conn, err := tls.Dial("tcp", servername, tlsConfig)
 	if checkErr(err) {
-		return false
+		return err
 	}
 
 	//retorna client SMTP
 	c, err := smtp.NewClient(conn, host)
 	if checkErr(err) {
-		return false
+		return err
 	}
 
 	//autentica
 	err = c.Auth(auth)
 	if checkErr(err) {
-		return false
+		return err
 	}
 
 	//adiciona remetente
 	err = c.Mail("shopper.tiago@gmail.com")
 	if checkErr(err) {
-		return false
+		return err
 	}
 
 	//adiciona destinatários
 	err = c.Rcpt(to)
 	if checkErr(err) {
-		return false
+		return err
 	}
 
 	//prepara corpo do email
 	w, err := c.Data()
 	if checkErr(err) {
-		return false
+		return err
 	}
 
 	//adiciona corpo do e-mail
 	_, err = w.Write([]byte(msg))
 	if checkErr(err) {
-		return false
+		return err
 	}
 
 	//fecha corpo do e-mail
 	err = w.Close()
 	if checkErr(err) {
-		return false
+		return err
 	}
 
 	//encerra conexão
 	c.Quit()
-	return true
+	return nil
 }
 
 func checkErr(err error) bool {
