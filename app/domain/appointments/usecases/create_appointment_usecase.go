@@ -134,7 +134,7 @@ func CreateAppointmentUseCase(newAppointmentDTO *dtos.AppointmentRequestDTO) (bo
 
 			confirmationLink := os.Getenv("CONFIRMATION_LINK")
 			subject := "Subject: Link de confirmação\n\n"
-			body := fmt.Sprintf("%s/confirmed?apnmnt=%s&slot=%s&day=%s&month=%s&year=%s",
+			body := fmt.Sprintf("%s?apnmnt=%s&slot=%s&day=%s&month=%s&year=%s",
 				confirmationLink,
 				newAppointment.Id.String(),
 				slotString,
