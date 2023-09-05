@@ -51,6 +51,8 @@ func Init() {
 		err := db.Ping() // what do this function really does
 
 		if err != nil {
+			fmt.Println("ping err: ", err)
+
 			panic("[database]: Ocorreu um erro no servidor")
 		}
 	})
