@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"rhSystem_server/app/application/helpers"
 	"rhSystem_server/app/domain/candidates/usecases"
 )
 
 func CreateAccessKeyHandler(w http.ResponseWriter, r *http.Request) {
+
+	helpers.EnableCors(&w)
 
 	fmt.Println("r.URL.RawQuery: ", r.URL.RawQuery)
 

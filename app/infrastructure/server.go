@@ -1,7 +1,6 @@
 package infrastructure
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -27,8 +26,6 @@ func InitServer() {
 			return true
 		},
 	}).Handler(routes.Router())
-
-	fmt.Println("handler: ", handler)
 
 	log.Fatal(http.ListenAndServe(": "+portString, handler))
 }
