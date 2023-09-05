@@ -25,6 +25,7 @@ func InitServer() {
 		AllowOriginFunc: func(origin string) bool {
 			return true
 		},
+		AllowedOrigins: []string{"*"},
 	}).Handler(routes.Router())
 
 	log.Fatal(http.ListenAndServe(": "+portString, handler))
