@@ -37,7 +37,7 @@ func CreateAccessKeyUseCase(email string) (*entities.Candidate, *shared.AppError
 			fmt.Println("Error: ", err.Message)
 		}
 
-		subject := "CHAVE DE ACESSO"
+		subject := "CHAVE DE ACESSO\n\n"
 		body := accessKey.Value
 		emailErr := applicationServices.SendEmail(candidate.Email, subject, body)
 

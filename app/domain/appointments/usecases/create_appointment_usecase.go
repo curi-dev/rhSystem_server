@@ -56,7 +56,7 @@ func CreateAppointmentUseCase(newAppointmentDTO *dtos.AppointmentRequestDTO) (bo
 					)
 				}
 			} else {
-				return false, &shared.AppError{Message: "Candidato possui agendamento pendente de confirmação", StatusCode: http.StatusOK}
+				return false, &shared.AppError{Message: "Candidato possui agendamento pendente de confirmação", StatusCode: http.StatusPreconditionFailed}
 			}
 		} else {
 			return false, &shared.AppError{Message: "Ocorreu um erro no servidor", StatusCode: http.StatusInternalServerError}
@@ -76,8 +76,6 @@ func CreateAppointmentUseCase(newAppointmentDTO *dtos.AppointmentRequestDTO) (bo
 	var slotRepo interfaces.SlotsRepositoryInterface
 	slotRepo = slotsRepository.New()
 	slotAvaiable, err := services.CheckIfSlotExists(newAppointmentDTO.Slot, &newAppointmentDTO.SplittedDate, slotRepo)
-
-	fmt.Println("slotAvaiable: ", slotAvaiable)
 
 	if err != nil {
 		return false, err
@@ -117,7 +115,7 @@ func CreateAppointmentUseCase(newAppointmentDTO *dtos.AppointmentRequestDTO) (bo
 	}
 
 	// needs to have a goroutine to receive the value otherwise execution will stay blocked (use defer maybe)
-	//channel <- true
+	// channel <- true
 	fmt.Println("Success: Call defer channel func: ", success)
 
 	if success {
