@@ -3,6 +3,7 @@ package usecases
 import (
 	"fmt"
 	"net/http"
+	"os"
 	shared "rhSystem_server/app/application/error"
 	applicationServices "rhSystem_server/app/application/services"
 	"rhSystem_server/app/domain/appointments/dtos"
@@ -22,6 +23,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 )
 
 func CreateAppointmentUseCase(newAppointmentDTO *dtos.AppointmentRequestDTO) (bool, *shared.AppError) { // status, message, error boolean
@@ -32,9 +34,6 @@ func CreateAppointmentUseCase(newAppointmentDTO *dtos.AppointmentRequestDTO) (bo
 	appointmentsRepo = appointmentsRepository.New()
 	appointmentFound, err := services.CheckIfCandidateHasAppointmentAlready(newAppointmentDTO.CandidateId, appointmentsRepo)
 
-	fmt.Println("appointmentFound: ", appointmentFound)
-	fmt.Println("err: ", err)
-
 	if err != nil {
 		return false, err
 	}
@@ -44,11 +43,6 @@ func CreateAppointmentUseCase(newAppointmentDTO *dtos.AppointmentRequestDTO) (bo
 		if v, ok := appointmentFound["created_at"].(time.Time); ok {
 
 			elapsedTimeFromSchedule := time.Since(v)
-
-			fmt.Println("v: ", v)
-			fmt.Println("elapsedTimeFromSchedule: ", elapsedTimeFromSchedule)
-			fmt.Println("elapsedTimeFromSchedule.Minutes(): ", elapsedTimeFromSchedule.Minutes())
-
 			if elapsedTimeFromSchedule.Minutes()-3*60 > 25 { // timezone compensation
 				if appointmentId, ok := appointmentFound["id"].(int); ok {
 
@@ -57,7 +51,6 @@ func CreateAppointmentUseCase(newAppointmentDTO *dtos.AppointmentRequestDTO) (bo
 						channel <- true
 					}()
 
-					fmt.Println("Update appointment")
 					services.UpdateAppointmentStatusOnRoutineService(
 						dtos.UpdateAppointmentStatusDTO{Id: appointmentId, Status: enums.Canceled, Repo: appointmentsRepo, C: channel},
 					)
@@ -130,14 +123,19 @@ func CreateAppointmentUseCase(newAppointmentDTO *dtos.AppointmentRequestDTO) (bo
 	if success {
 		go func() {
 
+			godotenv.Load("env")
+
 			fmt.Println("Send email!")
+
 			slotString := strconv.Itoa(newAppointment.Slot)
 			dayString := strconv.Itoa(newAppointmentDTO.SplittedDate.Day)
 			yearString := strconv.Itoa(newAppointmentDTO.SplittedDate.Year)
 			monthString := strconv.Itoa(int(newAppointmentDTO.SplittedDate.Month))
 
+			confirmationLink := os.Getenv("CONFIRMATION_LINK")
 			subject := "Subject: Link de confirmação\n\n"
-			body := fmt.Sprintf("http://localhost:3000/confirmed?apnmnt=%s&slot=%s&day=%s&month=%s&year=%s",
+			body := fmt.Sprintf("%s?apnmnt=%s&slot=%s&day=%s&month=%s&year=%s",
+				confirmationLink,
 				newAppointment.Id.String(),
 				slotString,
 				dayString,
