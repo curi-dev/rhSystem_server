@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -27,6 +28,8 @@ func InitServer() {
 		},
 		AllowedOrigins: []string{"*"},
 	}).Handler(routes.Router())
+
+	fmt.Println("port: ", portString)
 
 	log.Fatal(http.ListenAndServe(": "+portString, handler))
 }
