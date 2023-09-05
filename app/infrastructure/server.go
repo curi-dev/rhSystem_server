@@ -3,6 +3,7 @@ package infrastructure
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/joho/godotenv"
 
@@ -14,11 +15,11 @@ import (
 func InitServer() {
 	godotenv.Load(".env")
 
-	//portString := os.Getenv("PORT")
+	portString := os.Getenv("PORT")
 
-	// if portString == "" {
-	// 	log.Fatal("Port is not found in the environment")
-	// }
+	if portString == "" {
+		log.Fatal("Port is not found in the environment")
+	}
 
 	handler := cors.New(cors.Options{
 		AllowOriginFunc: func(origin string) bool {
@@ -29,6 +30,6 @@ func InitServer() {
 
 	//fmt.Println("port: ", portString)
 
-	//log.Fatal(http.ListenAndServe(": "+"8080", handler))
-	log.Fatal(http.ListenAndServe(":8080", handler))
+	log.Fatal(http.ListenAndServe(":"+portString, handler))
+	// log.Fatal(http.ListenAndServe(":8080", handler))
 }
