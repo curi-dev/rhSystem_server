@@ -21,6 +21,10 @@ func InitServer() {
 		log.Fatal("Port is not found in the environment")
 	}
 
-	handler := cors.Default().Handler(routes.Router())
+	handler := cors.New(cors.Options{
+		AllowOriginFunc: func(origin string) bool {
+			return true
+		},
+	}).Handler(routes.Router())
 	log.Fatal(http.ListenAndServe(": "+portString, handler))
 }
