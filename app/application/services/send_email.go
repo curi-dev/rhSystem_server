@@ -2,35 +2,10 @@ package services
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net/smtp"
+	"strings"
 )
-
-// func SendConfirmationEmail(email string, appointmentId string) bool {
-// 	m := gomail.NewMessage()
-
-// 	m.SetHeader("From", "shopper.tiago@gmail.com")
-// 	m.SetHeader("to", email)
-
-// 	confirmationLinkMessage := fmt.Sprintf("Link de confirmação: http://localhost:3000/%s", appointmentId)
-// 	m.SetHeader("Subject", confirmationLinkMessage)
-
-// 	m.SetBody("text/plain", "Segue link de confirmação: ")
-
-// 	d := gomail.NewDialer("smtp.gmail.com", 587, "shopper.tiago@gmail.com", "lgivvrjvybnnipti")
-
-// 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-
-// 	if err := d.DialAndSend(m); err != nil {
-
-// 		fmt.Println("Err: ", err.Error())
-
-// 		fmt.Println("Email not sent")
-
-// 		return false
-// 	}
-
-// 	return true
-// }
 
 func SendEmail(to string, subject string, body string) error {
 	//configuração
@@ -70,6 +45,9 @@ func SendEmail(to string, subject string, body string) error {
 		return err
 	}
 
+	to = strings.Trim(to, " ")
+
+	fmt.Println("To: ", to)
 	//adiciona destinatários
 	err = c.Rcpt(to)
 	if checkErr(err) {
