@@ -142,6 +142,10 @@ func CreateAppointmentUseCase(newAppointmentDTO *dtos.AppointmentRequestDTO) (bo
 				monthString,
 				yearString,
 			)
+
+			fmt.Println("confirmation link: ", confirmationLink)
+			fmt.Println("newAppointmentDTO.CandidateEmail: ", newAppointmentDTO.CandidateEmail)
+
 			applicationServices.SendEmail(newAppointmentDTO.CandidateEmail, subject, body) // id is coming from the prebuilt struct (before databse insertion)
 		}()
 	}
