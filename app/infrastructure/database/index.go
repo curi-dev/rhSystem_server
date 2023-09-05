@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -36,6 +37,9 @@ func Init() {
 
 		// dsn := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s", user, password, host, database, sslMode)
 		dsn := os.Getenv("DATABASE_URL")
+
+		fmt.Println("dsn: ", dsn)
+
 		driver := "postgres"
 
 		db, err = sql.Open(driver, dsn)
