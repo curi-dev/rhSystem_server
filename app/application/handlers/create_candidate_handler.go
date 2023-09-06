@@ -2,27 +2,31 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"rhSystem_server/app/domain/candidates/dtos"
 	"rhSystem_server/app/domain/candidates/services"
-	repositories "rhSystem_server/app/infrastructure/repositories/candidates"
 	"rhSystem_server/app/infrastructure/repositories/interfaces"
+
+	repositories "rhSystem_server/app/infrastructure/repositories/candidates"
 )
 
 func CreateCandidateHandler(w http.ResponseWriter, r *http.Request) {
 
-	var newCandidate dtos.CandidateRequestDTO
+	var newCandidateDto dtos.CandidateRequestDTO
 
-	decodeErr := json.NewDecoder(r.Body).Decode(&newCandidate)
+	decodeErr := json.NewDecoder(r.Body).Decode(&newCandidateDto)
 
 	if decodeErr != nil {
 		http.Error(w, "Dados inválidos", http.StatusBadRequest)
 		return
 	}
 
+	fmt.Println("newCandidateDto: ", newCandidateDto.Name)
+
 	var repo interfaces.CandidateRepositoryInterface
 	repo = repositories.New()
-	createdCandidate, err := services.CreateCandidateService(&newCandidate, repo)
+	createdCandidate, err := services.CreateCandidateService(&newCandidateDto, repo)
 
 	if err != nil {
 		http.Error(w, err.Message, err.StatusCode)
